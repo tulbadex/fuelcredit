@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>login Page</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <!-- <div class="header">
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">login</a></li>
+                <li><a href="#">Register</a></li>
+            </ul>
+        </div> -->
+    </header>
+
+
+    <div class="container" style="margin-bottom: 50px;">
+        <div class="form">
+
+            <form action="#" class="auth" id="auth">
+
+                <h2>Registeration Form</h2>
+                <div class="success_msg" id="success_msg" style="display: none; margin-left: 10px;"></div>
+
+                <label for="fname">First Name</label>
+                <input type="text" name="fname" id="fname">
+                <div class="fname_error" id="fname_error" style="display: none; margin-left: 10px;"></div>
+
+                <label for="lname">Last Name</label>
+                <input type="text" name="lname" id="lname">
+                <div class="lname_error" id="lname_error" style="display: none; margin-left: 10px;"></div>
+
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username">
+                <div class="username_error" id="username_error" style="display: none; margin-left: 10px;"></div>
+
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email">
+                <div class="email_error" id="email_error" style="display: none; margin-left: 10px;"></div>
+
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password">
+                <div class="pswd_error" id="pswd_error" style="display: none; margin-left: 10px;"></div>
+
+                <label for="phone_no">Phone Number</label>
+                <input type="text" name="phone_no" id="phone_no">
+                <div class="phone_error" id="phone_error" style="display: none; margin-left: 10px;"></div>
+
+                <div class="loginButton">
+                    <button type="submit">Register</button>
+                    <input type="hidden" name="register" value="register" id="register">
+                </div>
+
+                <div class="newuser">
+                    <a href="login.html">Have account, login here?</a>
+                </div>
+
+                <div class="errors" id="errors" style="display: none; margin-left: 10px;"></div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
+
+
+<script>
+    var form = document.getElementById('auth');
+    var username_check = document.getElementById("username");
+    username_check.addEventListener("blur", function (e) {
+        var username_error = document.getElementById('username_error');
+
+        if (this.value.length > 4) {
+            username_error.style.display = "none";
+            fetch("action/action.php", {
+                method: 'post',
+                body: JSON.stringify({
+                    username: this.value
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then( res => res.json())
+            .then( data => {
+                console.log(data)
+            })
+        } else {
+            username_error.style.display = "block";
+            username_error.innerHTML = '<p class="error">Username must be at least 4 character</p>';
+            return false;
+        }
+    })
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var username = document.getElementById('username').value;
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+
+        var username_error = document.getElementById('username_error');
+        var email_error = document.getElementById('email_error');
+        var pswd_error = document.getElementById('pswd_error');
+        var errors = document.getElementById('errors');
+        var success = document.getElementById('success_msg');
+
+        if (username.length > 4) {
+            username_error.style.display = "none";
+        } else {
+            username_error.style.display = "block";
+            username_error.innerHTML = '<p class="error">Username must be at least 4 character</p>';
+            return false;
+        }
+
+        if (validateEmail(email)) {
+            email_error.style.display = "none";
+        } else {
+            email_error.style.display = "block";
+            email_error.innerHTML = '<p class="error">Invalid email</p>';
+            return false;
+        }
+
+        if (password.length > 6) {
+            pswd_error.style.display = "none";
+        } else {
+            pswd_error.style.display = "block";
+            pswd_error.innerHTML = '<p class="error">Password must be at least 6 character long</p>';
+            return false;
+        }
+
+        if (password && email && username) {
+            fetch('action/action.php', {
+                method: 'post',
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    register: "register"
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then((data) => {
+                    if (data.error) {
+                        if (data.username_error) {
+                            username_error.style.display = "block";
+                            username_error.innerHTML = '<p class="error">' + data.username_error + '</p>';
+                        } else {
+                            username_error.style.display = "none";
+                        }
+
+                        if (data.email_error) {
+                            email_error.style.display = "block";
+                            email_error.innerHTML = '<p class="error">' + data.email_error + '</p>';
+                        } else {
+                            email_error.style.display = "none";
+                        }
+
+                        if (data.password_error) {
+                            pswd_error.style.display = "block";
+                            pswd_error.innerHTML = '<p class="error">' + data.password_error + '</p>';
+                        } else {
+                            pswd_error.style.display = "none";
+                        }
+
+                        if (data.errors) {
+                            errors.style.display = "block";
+                            errors.innerHTML = '<p class="error">' + data.errors + '</p>';
+                        } else {
+                            errors.style.display = "none";
+                        }
+                    }
+
+                    if (data.success) {
+                        success.style.display = "block";
+                        success.innerHTML = '<p class="success">' + data.success_message + '</p>';
+
+                        window.setTimeout(function () {
+                            window.location.href = "login.html";
+
+                        }, 1000);
+                    } else {
+                        success.style.display = "none";
+                    }
+                    // console.log(data);
+                })
+                .catch(err => console.log(err));
+        }
+
+    });
+
+    function checkPhone(phone) {
+        
+    }
+
+    function validateEmail(email) {
+        const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+
+
+</script>
