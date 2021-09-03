@@ -1,8 +1,0 @@
-[03-Sep-2021 15:06:32 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [1049] Unknown database 'auth' in C:\wamp64\www\auth\db\Db.php:8
-Stack trace:
-#0 C:\wamp64\www\auth\db\Db.php(8): PDO->__construct('mysql:host=loca...', 'root', '')
-#1 C:\wamp64\www\auth\helper\functions.php(2): include_once('C:\\wamp64\\www\\a...')
-#2 C:\wamp64\www\auth\includes\header.php(3): include_once('C:\\wamp64\\www\\a...')
-#3 C:\wamp64\www\auth\index.php(2): include_once('C:\\wamp64\\www\\a...')
-#4 {main}
-  thrown in C:\wamp64\www\auth\db\Db.php on line 8
