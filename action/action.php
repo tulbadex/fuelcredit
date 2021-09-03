@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
         if ($error_count === 0) {
             if (!empty($password) && !empty($email)) {
-                $query = "SELECT * FROM user where email = :email";
+                $query = "SELECT * FROM users where email = :email";
                 $statement = $conn->prepare($query);
                 $statement->execute(array(
                     ':email' => $email
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $user_exist = false;
 
         if (empty($_POST["username"])) {
-            $nameErr = "Name is required";
+            $nameErr = "Username is required";
         } else {
             $username = test_input($_POST["username"]);
             // check if name only contains letters and whitespace
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             );
 
             if (!empty($password) && !empty($email) && !empty($username)) {
-                $query = "SELECT * FROM user where username = :username";
+                $query = "SELECT * FROM users where username = :username";
                 $statement = $conn->prepare($query);
                 $statement->execute(array(
                     ':username' => $username
@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                     $error_count++;
                     $user_exist = true;
                 }else{
-                    $query = "SELECT * FROM user where email = :email";
+                    $query = "SELECT * FROM users where email = :email";
                     $statement = $conn->prepare($query);
                     $statement->execute(array(
                         ':email' => $email
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                 // if email doesnt exist and username then insert into the database
                 if ($email_exist === false && $user_exist === false) {
-                    $query = "INSERT INTO user (username, email, password) VALUES(:username, :email, :password)";
+                    $query = "INSERT INTO users (username, email, password) VALUES(:username, :email, :password)";
                     $statement = $conn->prepare($query);
                     $statement->execute($data);
                 }else{
@@ -191,6 +191,52 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
 
         echo json_encode($output);
+    }
+
+    if ($_POST['action'] == "check-username" && isset($_POST['username'], $_POST['action']) && $_POST['username'] !== '') {
+
+        if (empty($_POST["username"])) {
+            $nameErr = "Username is required";
+        } else {
+            $username = test_input($_POST["username"]);
+            // check if name only contains letters and whitespace
+            if (!preg_match("/^[a-zA-Z]*$/",$username)) {
+                $username_error = "Only letters without space";
+                $error_count++;
+            }
+        }
+
+        if ($error_count === 0) {
+            $query = "SELECT * FROM users where username = :username";
+            $statement = $conn->prepare($query);
+            $statement->execute(array(
+                ':username' => $username
+            ));
+
+            $row_count = $statement->rowCount();
+            if ($row_count > 0) {
+                $username_error = 'Username already exist';
+                $error_count++;
+                $user_exist = true;
+            }else{
+                $user_exist = false;
+            }
+        }
+
+        if ($error_count > 0 && $user_exist == true) {
+            $output = array(
+                'error'     => true,
+                'username_error' => $username_error
+            );
+        }else{
+            $output = array(
+                'success'  => true,
+                'success_message' => 'Username is available'
+            );
+        }
+
+        echo json_encode($output);
+        
     }
 
 
