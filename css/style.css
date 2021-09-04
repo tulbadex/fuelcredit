@@ -94,8 +94,8 @@ form.auth button{
     color: #D8000C;
     background-color: #FFBABA;
     border: 1px solid;
-    margin: 10px 0px;
-    padding: 15px 10px 15px 50px;
+    margin: 10px 0 10px 1.2rem;
+    padding: 15px 10px 15px 25px;
     background-repeat: no-repeat;
     background-position: 10px center;
 }
@@ -104,8 +104,8 @@ form.auth button{
     color: #270;
     background-color: #DFF2BF;
     border: 1px solid;
-    margin: 10px 0px;
-    padding: 15px 10px 15px 50px;
+    margin: 10px 0 10px 1.2rem;
+    padding: 15px 10px 15px 25px;
     background-repeat: no-repeat;
     background-position: 10px center;
 }
@@ -171,6 +171,30 @@ form.auth button{
 	pointer-events: none;
 	opacity: 1;
 }
+
+.displayBadge{
+    margin-top: 5%; 
+    display: none; 
+    text-align :center;
+    margin-left: 1.2rem;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
   
 /* Making the header responsive */
 

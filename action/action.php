@@ -1,4 +1,8 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 header("Access-Control-Allow-Origin: *");
 include_once('../db/Db.php');
 session_start();
@@ -6,7 +10,7 @@ session_start();
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     // $error = [];
     $error_count = 0;
-    $email_error = $password_error = $error = $username_error = '';
+    $fname_error = $lname_error = $email_error = $password_error = $error = $phone_error = $username_error = '';
     $_POST = json_decode(file_get_contents('php://input'), true);
     
     if (isset($_POST['login']) && $_POST['login'] == 'login') {
@@ -83,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
 
         echo json_encode($output);
+        die();
     }
 
 
@@ -90,16 +95,42 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
     // For register
     if (isset($_POST['register']) && $_POST['register'] == 'register') {
+        sleep(2);
         $email_exist = false;
         $user_exist = false;
 
+        if (empty($_POST["fname"])) {
+            $fname_error = "First Name is required";
+            $error_count++;
+        } else {
+            $fname = test_input($_POST["fname"]);
+            // check if name only contains letters and whitespace
+            if (!preg_match("/^[a-zA-Z]{3,}$/",$fname)) {
+                $fname_error = "First Name must be letter only and 3 charcter without space";
+                $error_count++;
+            }
+        }
+
+        if (empty($_POST["lname"])) {
+            $lname_error = "Last Name is required";
+            $error_count++;
+        } else {
+            $lname = test_input($_POST["lname"]);
+            // check if name only contains letters and whitespace
+            if (!preg_match("/^[a-zA-Z]{3,}$/",$lname)) {
+                $lname_error = "Last Name must be letter only and 3 charcter without space";
+                $error_count++;
+            }
+        }
+
         if (empty($_POST["username"])) {
-            $nameErr = "Username is required";
+            $username_error = "Username is required";
+            $error_count++;
         } else {
             $username = test_input($_POST["username"]);
             // check if name only contains letters and whitespace
-            if (!preg_match("/^[a-zA-Z]*$/",$username)) {
-                $username_error = "Only letters without space";
+            if (!preg_match("/^[a-zA-Z0-9]{3,}$/",$username) && filter_var($username, FILTER_VALIDATE_EMAIL)) {
+                $username_error = "Username must be at least 3 character & can't be an email";
                 $error_count++;
             }
         }
@@ -126,12 +157,27 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $password = password_hash(test_input($_POST["password"]), PASSWORD_DEFAULT);
         }
 
+        if (empty($_POST["phone"])) {
+            $phone_error = "Phone Number is required";
+            $error_count++;
+        } else {
+            $phone = test_input($_POST["phone"]);
+            // check if name only contains letters and whitespace
+            if (!preg_match("/^[+](2347|2348|2349)[0-9]{9}$/",$phone)) {
+                $phone_error = "Invalid phone number start with (+234)";
+                $error_count++;
+            }
+        }
+
 
         if ($error_count === 0) {
             $data = array(
+                ':fname'    => $fname,
+                ':lname'    => $lname,
                 ':username'    => $username,
                 ':email'  => $email,
-                ':password'    => $password
+                ':password'    => $password,
+                ':phone'    => $phone
             );
 
             if (!empty($password) && !empty($email) && !empty($username)) {
@@ -164,11 +210,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                 // if email doesnt exist and username then insert into the database
                 if ($email_exist === false && $user_exist === false) {
-                    $query = "INSERT INTO users (username, email, password) VALUES(:username, :email, :password)";
+                    $query = "INSERT INTO users (fname, lname, username, email, password, phone, created_at) VALUES(:fname, :lname, :username, :email, :password, :phone, NOW())";
                     $statement = $conn->prepare($query);
                     $statement->execute($data);
+                    $email_subject = "Tanks for registering";
+                    $email_content = "This is to notify you that you just signed up on our website";
+                    $usere = $email;
+                    $toname = $fname.' '.$lname;
+                    mailClient($email_subject, $email_content, $usere, $toname);
                 }else{
-                    $error = "Error occur while registeration is on!";
+                    $error = "Error occur while registering!";
                     $error_count++;
                 }
             }
@@ -178,9 +229,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         if ($error_count > 0) {
             $output = array(
                 'error'     => true,
+                'fname_error' => $fname_error,
+                'lname_error' => $lname_error,
                 'username_error' => $username_error,
                 'email_error' => $email_error,
                 'password_error' => $password_error,
+                'phone_error' => $phone_error,
                 'errors' => $error
             );
         }else{
@@ -191,17 +245,20 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
 
         echo json_encode($output);
+        die();
     }
 
-    if ($_POST['action'] == "check-username" && isset($_POST['username'], $_POST['action']) && $_POST['username'] !== '') {
+    if (isset($_POST['action'], $_POST['username']) && $_POST['action'] == "check-username" && $_POST !== '') {
+        $user_exist = false;
 
         if (empty($_POST["username"])) {
-            $nameErr = "Username is required";
+            $username_error = "Username is required";
+            $error_count++;
         } else {
             $username = test_input($_POST["username"]);
             // check if name only contains letters and whitespace
-            if (!preg_match("/^[a-zA-Z]*$/",$username)) {
-                $username_error = "Only letters without space";
+            if (!preg_match("/^[a-z0-9]{3,}[A-Z]$/",$username) && filter_var($username, FILTER_VALIDATE_EMAIL)) {
+                $username_error = "Username must be at least 3 character & can't be an email";
                 $error_count++;
             }
         }
@@ -236,6 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
 
         echo json_encode($output);
+        die();
         
     }
 
@@ -250,4 +308,54 @@ function test_input($data) {
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
     return $data;
-  }
+}
+
+function mailClient($email_subject, $email_content, $usere, $toname, $sendersEmail=NULL){
+	require_once __DIR__.'/../PHPMailer/src/Exception.php';
+	require_once __DIR__.'/../PHPMailer/src/PHPMailer.php';
+	require_once __DIR__.'/../PHPMailer/src/SMTP.php';
+	/* $sendersEmail ??= "info@nairaload.com";
+	echo $sendersEmail;
+	die(); */
+
+	//Create an instance; passing `true` enables exceptions
+	$mail = new PHPMailer(true);
+
+	try {
+		//Server settings SMTP::DEBUG_SERVER
+		// $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
+		$mail->isSMTP();                                            //Send using SMTP
+		$mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+		$mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+		$mail->Username   = 'tulbadex@gmail.com';                     //SMTP username
+		$mail->Password   = 'babatunde12345';                               //SMTP password
+		// $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
+		$mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+		$mail->SMTPSecure = 'tls';
+
+		$mail->SMTPOptions = array(
+			'ssl' => array(
+				'verify_peer' => false,
+				'verify_peer_name' => false,
+				'allow_self_signed' => true
+			)
+		);
+
+		//Recipients
+		$senderEmail = $sendersEmail ?? "tulbadex@gmail.com";
+		
+		$mail->setFrom($senderEmail, 'Ibrahim Registration Site');
+		$mail->addAddress($usere, $toname);     //Add a recipient
+
+
+		//Content
+		// $mail->isHTML(true);                                  //Set email format to HTML
+		$mail->Subject = $email_subject;
+		$mail->Body    = $email_content;
+
+		$mail->send();
+		return 'success';
+	} catch (Exception $e) {
+		echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+	}
+}

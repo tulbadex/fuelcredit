@@ -27,34 +27,35 @@
             <form action="#" class="auth" id="auth">
 
                 <h2>Registeration Form</h2>
-                <div class="success_msg" id="success_msg" style="display: none; margin-left: 10px;"></div>
+                <div class="success_msg" id="success_msg" style="display: none;"></div>
 
                 <label for="fname">First Name</label>
                 <input type="text" name="fname" id="fname">
-                <div class="fname_error" id="fname_error" style="display: none; margin-left: 10px;"></div>
+                <div class="fname_error" id="fname_error" style="display: none;"></div>
 
                 <label for="lname">Last Name</label>
                 <input type="text" name="lname" id="lname">
-                <div class="lname_error" id="lname_error" style="display: none; margin-left: 10px;"></div>
+                <div class="lname_error" id="lname_error" style="display: none;"></div>
 
                 <label for="username">Username</label>
                 <input type="text" name="username" id="username">
-                <div class="username_error" id="username_error" style="display: none; margin-left: 10px;"></div>
+                <div class="username_error" id="username_error" style="display: none;"></div>
 
                 <label for="email">Email</label>
                 <input type="email" name="email" id="email">
-                <div class="email_error" id="email_error" style="display: none; margin-left: 10px;"></div>
+                <div class="email_error" id="email_error" style="display: none;"></div>
 
                 <label for="password">Password</label>
                 <input type="password" name="password" id="password">
-                <div class="pswd_error" id="pswd_error" style="display: none; margin-left: 10px;"></div>
+                <span id="strengthBadge" class="displayBadge"></span>
+                <div class="pswd_error" id="pswd_error" style="display: none;"></div>
 
                 <label for="phone_no">Phone Number</label>
                 <input type="text" name="phone_no" id="phone_no" maxlength="15" minlength="14">
-                <div class="phone_error" id="phone_error" style="display: none; margin-left: 10px;"></div>
+                <div class="phone_error" id="phone_error" style="display: none;"></div>
 
                 <div class="loginButton">
-                    <button type="submit">Register</button>
+                    <button type="submit" id="submit">Register</button>
                     <input type="hidden" name="register" value="register" id="register">
                 </div>
 
@@ -62,7 +63,7 @@
                     <a href="login.html">Have account, login here?</a>
                 </div>
 
-                <div class="errors" id="errors" style="display: none; margin-left: 10px;"></div>
+                <div class="errors" id="errors" style="display: none;"></div>
             </form>
         </div>
     </div>
@@ -87,7 +88,7 @@
     // Adding an input event listener when a user types to the  password input 
 
     password_checker.addEventListener("input", () => {
-        var pswd_error = document.getElementById('pswd_error');
+        var pswd_error = document.getElementById('strengthBadge');
 
         //The badge is hidden by default, so we show it
 
@@ -111,7 +112,7 @@
     username_check.addEventListener("blur", function (e) {
         var username_error = document.getElementById('username_error');
 
-        if (this.value.length > 4) {
+        if (this.value.length >= 3 && !validateEmail(this.value)) {
             username_error.style.display = "none";
             fetch("action/action.php", {
                 method: 'post',
@@ -136,7 +137,7 @@
             })
         } else {
             username_error.style.display = "block";
-            username_error.innerHTML = '<p class="error">Username must be at least 4 character</p>';
+            username_error.innerHTML = '<p class="error">Username must be at least 3 character & can\'t be an email</p>';
             return false;
         }
     })
@@ -162,21 +163,54 @@
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+        var name = /^[a-zA-Z]*$/
+        var uname = /^[a-zA-Z0-9]*$/
+        var phone_valid = /^[+](2347|2348|2349)[0-9]{9}$/;
+
+        
+        var fname = document.getElementById('fname').value;
+        var lname = document.getElementById('lname').value;
         var username = document.getElementById('username').value;
         var email = document.getElementById('email').value;
         var password = document.getElementById('password').value;
+        var phone = document.getElementById('phone_no').value;
 
+        var fname_error = document.getElementById('fname_error');
+        var lname_error = document.getElementById('lname_error');
         var username_error = document.getElementById('username_error');
         var email_error = document.getElementById('email_error');
         var pswd_error = document.getElementById('pswd_error');
+        var phone_error = document.getElementById('phone_error');
         var errors = document.getElementById('errors');
         var success = document.getElementById('success_msg');
 
-        if (username.length > 4) {
+        var pass_strength = document.getElementById('strengthBadge');
+
+        var submit_button = document.getElementById('submit');
+
+        // var z = (!pattern.test(this.value) && this.value != "");
+
+        if (name.test(fname) && fname.length >= 3) {
+            fname_error.style.display = "none";
+        } else {
+            fname_error.style.display = "block";
+            fname_error.innerHTML = '<p class="error">First Name must be letter only and 3 charcter without space</p>';
+            return false;
+        }
+
+        if (name.test(lname) && lname.length >= 3) {
+            lname_error.style.display = "none";
+        } else {
+            fname_error.style.display = "block";
+            lname_error.innerHTML = '<p class="error">Last Name must be letter only and 3 charcter without space</p>';
+            return false;
+        }
+
+        if (username.length >= 3 && uname.test(username) && !validateEmail(username)) {
             username_error.style.display = "none";
         } else {
             username_error.style.display = "block";
-            username_error.innerHTML = '<p class="error">Username must be at least 4 character</p>';
+            username_error.innerHTML = '<p class="error">Username must be at least 3 character & can\'t be an email</p>';
             return false;
         }
 
@@ -184,77 +218,113 @@
             email_error.style.display = "none";
         } else {
             email_error.style.display = "block";
-            email_error.innerHTML = '<p class="error">Invalid email</p>';
+            email_error.innerHTML = '<p class="error">Invalid email address</p>';
             return false;
         }
 
-        if (password.length > 6) {
+        if (pass_strength.innerHTML.toLowerCase() == 'strong' || pass_strength.innerHTML.toLowerCase() == 'medium') {
             pswd_error.style.display = "none";
         } else {
             pswd_error.style.display = "block";
-            pswd_error.innerHTML = '<p class="error">Password must be at least 6 character long</p>';
+            pswd_error.innerHTML = '<p class="error">Password must be at medium in strength</p>';
+            return false;
+        } 
+
+        if (phone_valid.test(phone) != false) {
+            phone_error.style.display = "none";
+        } else {
+            phone_error.style.display = "block";
+            phone_error.innerHTML = '<p class="error">Invalid phone number start with (+234)</p>';
             return false;
         }
 
-        if (password && email && username) {
+        if (fname && lname && username && password && email && username && phone) {
+            submit_button.disabled = true
+            submit_button.style.opacity = 0.1;
+            errors.innerHTML = '';
             fetch('action/action.php', {
                 method: 'post',
                 body: JSON.stringify({
+                    fname: fname,
+                    lname: lname,
                     username: username,
                     email: email,
                     password: password,
+                    phone: phone,
                     register: "register"
                 }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-                .then(res => res.json())
-                .then((data) => {
-                    if (data.error) {
-                        if (data.username_error) {
-                            username_error.style.display = "block";
-                            username_error.innerHTML = '<p class="error">' + data.username_error + '</p>';
-                        } else {
-                            username_error.style.display = "none";
-                        }
-
-                        if (data.email_error) {
-                            email_error.style.display = "block";
-                            email_error.innerHTML = '<p class="error">' + data.email_error + '</p>';
-                        } else {
-                            email_error.style.display = "none";
-                        }
-
-                        if (data.password_error) {
-                            pswd_error.style.display = "block";
-                            pswd_error.innerHTML = '<p class="error">' + data.password_error + '</p>';
-                        } else {
-                            pswd_error.style.display = "none";
-                        }
-
-                        if (data.errors) {
-                            errors.style.display = "block";
-                            errors.innerHTML = '<p class="error">' + data.errors + '</p>';
-                        } else {
-                            errors.style.display = "none";
-                        }
-                    }
-
-                    if (data.success) {
-                        success.style.display = "block";
-                        success.innerHTML = '<p class="success">' + data.success_message + '</p>';
-
-                        window.setTimeout(function () {
-                            window.location.href = "login.html";
-
-                        }, 1000);
+            .then(res => res.json())
+            .then((data) => {
+                if (data.error) {
+                    submit_button.disabled = false
+                    submit_button.style.opacity = 6;
+                    if (data.fname_error) {
+                        fname_error.style.display = "block";
+                        fname_error.innerHTML = '<p class="error">' + data.fname_error + '</p>';
                     } else {
-                        success.style.display = "none";
+                        fname_error.style.display = "none";
                     }
-                    // console.log(data);
-                })
-                .catch(err => console.log(err));
+
+                    if (data.lname_error) {
+                        lname_error.style.display = "block";
+                        lname_error.innerHTML = '<p class="error">' + data.lname_error + '</p>';
+                    } else {
+                        lname_error.style.display = "none";
+                    }
+
+                    if (data.username_error) {
+                        username_error.style.display = "block";
+                        username_error.innerHTML = '<p class="error">' + data.username_error + '</p>';
+                    } else {
+                        username_error.style.display = "none";
+                    }
+
+                    if (data.email_error) {
+                        email_error.style.display = "block";
+                        email_error.innerHTML = '<p class="error">' + data.email_error + '</p>';
+                    } else {
+                        email_error.style.display = "none";
+                    }
+
+                    if (data.password_error) {
+                        pswd_error.style.display = "block";
+                        pswd_error.innerHTML = '<p class="error">' + data.password_error + '</p>';
+                    } else {
+                        pswd_error.style.display = "none";
+                    }
+
+                    if (data.phone_error) {
+                        phone_error.style.display = "block";
+                        phone_error.innerHTML = '<p class="error">' + data.phone_error + '</p>';
+                    } else {
+                        phone_error.style.display = "none";
+                    }
+
+                    if (data.errors) {
+                        errors.style.display = "block";
+                        errors.innerHTML = '<p class="error">' + data.errors + '</p>';
+                    } else {
+                        errors.style.display = "none";
+                    }
+                }else if (data.success) {
+                    success.style.display = "block";
+                    success.innerHTML = '<p class="success">' + data.success_message + '</p>';
+
+                    window.setTimeout(function () {
+                        form.reset();
+                        window.location.href = "login.html";
+
+                    }, 2000);
+                } else {
+                    success.style.display = "none";
+                }
+                // console.log(data);
+            })
+            .catch(err => console.log(err));
         }
 
     });
@@ -267,7 +337,7 @@
 
     function StrengthChecker(PasswordParameter) {
         // We then change the badge's color and text based on the password strength
-        var pswd_error = document.getElementById('pswd_error');
+        var pswd_error = document.getElementById('strengthBadge');
 
         if (strongPassword.test(PasswordParameter)) {
             pswd_error.style.backgroundColor = "green"
@@ -278,7 +348,6 @@
         } else {
             pswd_error.style.backgroundColor = 'red'
             pswd_error.textContent = 'Weak'
-            return false
         }
     }
 
